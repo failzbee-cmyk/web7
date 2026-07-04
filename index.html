@@ -310,6 +310,8 @@
     .gallery{ height:60vh; }
     .polaroid{ width:100px; }
     .polaroid img{ height:100px; }
+    .balloon{ width:38px; height:48px; }
+    .balloon .num{ font-size:12px; }
   }
 
   @media (max-width:360px){
@@ -608,11 +610,17 @@ let balloonsBuilt = false;
 function buildBalloons(){
   if(balloonsBuilt) return;
   balloonsBuilt = true;
+  const cols = 6;
+  const rows = Math.ceil(TOTAL_BALLOONS/cols);
+  const colGapPct = 100/cols;
+  const rowGapPct = 78/rows;
   for(let i=1;i<=TOTAL_BALLOONS;i++){
     const b = document.createElement('div');
     b.className = 'balloon';
-    const leftPct = 3 + Math.random()*88;
-    const topPct = 2 + Math.random()*72;
+    const col = (i-1)%cols;
+    const row = Math.floor((i-1)/cols);
+    const leftPct = colGapPct*col + (colGapPct/2) - 8;
+    const topPct = rowGapPct*row + 4;
     const delay = Math.random()*3.5;
     const duration = 4.5 + Math.random()*2.5;
     b.style.left = leftPct+'%';
