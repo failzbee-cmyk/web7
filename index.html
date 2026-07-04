@@ -163,6 +163,67 @@
   .hint .arrow{ display:inline-block; animation:bob 1.6s ease-in-out infinite; }
   @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(4px);} }
 
+  /* ---------- Balloon pop ---------- */
+  #screen-balloons .sub{ margin-bottom:6px; }
+  .balloon-progress{
+    font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gold); opacity:.85; margin-top:10px; margin-bottom:6px;
+  }
+  .balloon-field{
+    position:relative; width:100%; max-width:640px; height:52vh;
+    margin-top:10px;
+  }
+  .balloon{
+    position:absolute;
+    width:52px; height:64px;
+    cursor:pointer;
+    animation:balloon-float 5.5s ease-in-out infinite;
+    transition:transform .15s ease;
+    will-change: transform;
+  }
+  .balloon:hover{ transform:scale(1.06); }
+  .balloon .body{
+    width:100%; height:82%;
+    border-radius:50% 50% 50% 50% / 58% 58% 42% 42%;
+    box-shadow:inset -6px -8px 14px rgba(0,0,0,.25), 0 10px 20px rgba(0,0,0,.35);
+    position:relative;
+  }
+  .balloon .body::after{
+    content:''; position:absolute; left:50%; bottom:-6px; transform:translateX(-50%);
+    width:0; height:0;
+    border-left:5px solid transparent; border-right:5px solid transparent;
+    border-top:7px solid rgba(0,0,0,.2);
+  }
+  .balloon .string{
+    position:absolute; left:50%; top:100%; width:1px; height:22px;
+    background:var(--line); transform:translateX(-50%);
+  }
+  .balloon .num{
+    position:absolute; inset:0 0 18% 0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--serif); font-weight:700; font-size:16px; color:rgba(255,255,255,.85);
+    text-shadow:0 1px 3px rgba(0,0,0,.35); pointer-events:none;
+  }
+  @keyframes balloon-float{
+    0%,100%{ transform:translateY(0) rotate(-2deg); }
+    50%{ transform:translateY(-16px) rotate(2deg); }
+  }
+  .balloon.popped{
+    animation:none;
+    pointer-events:none;
+    transition:transform .18s ease, opacity .18s ease;
+    transform:scale(1.3);
+    opacity:0;
+  }
+  .pop-burst{
+    position:absolute; font-size:28px; pointer-events:none;
+    animation:pop-burst .5s ease-out forwards;
+  }
+  @keyframes pop-burst{
+    0%{ transform:scale(.3); opacity:1; }
+    70%{ transform:scale(1.3); opacity:.9; }
+    100%{ transform:scale(1.6); opacity:0; }
+  }
+
   /* ---------- Gift box ---------- */
   .gift-wrap{ margin-top:36px; cursor:pointer; }
   .gift{ font-size:76px; filter:drop-shadow(0 0 24px rgba(216,181,121,.45)); animation:pulse 2.4s ease-in-out infinite; }
@@ -282,6 +343,16 @@
       <div class="cbox"><div class="num" id="cd-s">00</div><div class="lbl">Detik</div></div>
     </div>
     <button class="btn" id="btn-skip-countdown">✦ Buka Sekarang</button>
+  </section>
+
+  <!-- 2b. BALLOON POP -->
+  <section class="screen" id="screen-balloons">
+    <div class="eyebrow">Sebelum Buka Kado</div>
+    <h1 class="title">Pecahkan 18 Balon<br><span class="accent">Dulu, Yuk!</span></h1>
+    <p class="sub">Satu balon, satu doa baik untukmu ✧</p>
+    <div class="balloon-progress" id="balloon-progress">0 / 18 balon pecah</div>
+    <div class="balloon-field" id="balloon-field"></div>
+    <div class="hint" id="balloon-hint">Ketuk semua balon untuk melanjutkan</div>
   </section>
 
   <!-- 3. GIFT TEASER -->
@@ -483,12 +554,13 @@ if(CONFIG.musikAktif){
 }
 
 // ---------- Screen flow ----------
-const order = ['screen-loading','screen-countdown','screen-gift-teaser','screen-envelope','screen-letter','screen-gallery','screen-video','screen-wishes','screen-final'];
+const order = ['screen-loading','screen-countdown','screen-balloons','screen-gift-teaser','screen-envelope','screen-letter','screen-gallery','screen-video','screen-wishes','screen-final'];
 let current = 0;
 function showScreen(id){
   order.forEach(sid=>document.getElementById(sid).classList.remove('active'));
   document.getElementById(id).classList.add('active');
   current = order.indexOf(id);
+  if(id==='screen-balloons'){ buildBalloons(); }
   if(bgAudio && current>2 && bgAudio.paused){ bgAudio.play().catch(()=>{}); }
 }
 
@@ -504,7 +576,7 @@ function startCountdown(){
     const diff = target - now;
     if(diff<=0){
       clearInterval(countdownTimer);
-      showScreen('screen-gift-teaser');
+      showScreen('screen-balloons');
       return;
     }
     const d = Math.floor(diff/86400000);
@@ -521,8 +593,58 @@ function startCountdown(){
 }
 document.getElementById('btn-skip-countdown').addEventListener('click', ()=>{
   clearInterval(countdownTimer);
-  showScreen('screen-gift-teaser');
+  showScreen('screen-balloons');
 });
+
+// ---------- Balloon pop game ----------
+const balloonColors = ['#e3a6a1','#d8b579','#c98b8f','#e9d3a3','#b98a6b','#dba0a8'];
+const balloonField = document.getElementById('balloon-field');
+const balloonProgress = document.getElementById('balloon-progress');
+const balloonHint = document.getElementById('balloon-hint');
+const TOTAL_BALLOONS = 18;
+let poppedCount = 0;
+let balloonsBuilt = false;
+
+function buildBalloons(){
+  if(balloonsBuilt) return;
+  balloonsBuilt = true;
+  for(let i=1;i<=TOTAL_BALLOONS;i++){
+    const b = document.createElement('div');
+    b.className = 'balloon';
+    const leftPct = 3 + Math.random()*88;
+    const topPct = 2 + Math.random()*72;
+    const delay = Math.random()*3.5;
+    const duration = 4.5 + Math.random()*2.5;
+    b.style.left = leftPct+'%';
+    b.style.top = topPct+'%';
+    b.style.animationDelay = delay+'s';
+    b.style.animationDuration = duration+'s';
+    const color = balloonColors[Math.floor(Math.random()*balloonColors.length)];
+    b.innerHTML = `<div class="body" style="background:radial-gradient(circle at 32% 28%, ${color}, ${color}dd 60%, #00000055);"><div class="num">${i}</div></div><div class="string"></div>`;
+    b.addEventListener('click', ()=> popBalloon(b));
+    balloonField.appendChild(b);
+  }
+}
+
+function popBalloon(b){
+  if(b.classList.contains('popped')) return;
+  b.classList.add('popped');
+  poppedCount++;
+  balloonProgress.textContent = poppedCount + ' / ' + TOTAL_BALLOONS + ' balon pecah';
+
+  const burst = document.createElement('div');
+  burst.className = 'pop-burst';
+  burst.textContent = '✨';
+  burst.style.left = b.style.left;
+  burst.style.top = b.style.top;
+  balloonField.appendChild(burst);
+  setTimeout(()=> burst.remove(), 550);
+
+  if(poppedCount >= TOTAL_BALLOONS){
+    balloonHint.textContent = 'Semua balon pecah! Kadonya menunggumu ♥';
+    setTimeout(()=> showScreen('screen-gift-teaser'), 1100);
+  }
+}
 
 // Gift teaser -> envelope
 document.getElementById('gift-open').addEventListener('click', ()=>{
