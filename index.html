@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Happy Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Cormorant+Garamond:ital,wght@0,500;1,500;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CARA EDIT CEPAT ada di bagian bawah file ini (cari "KONFIGURASI")
+     Ganti nama, teks surat, foto, dan lagu di situ.
+     ============================================================ */
+
+  :root{
+    --bg-0:#0e0a13;
+    --bg-1:#1c1420;
+    --bg-2:#2a1d2b;
+    --gold:#d8b579;
+    --gold-soft:#e9d3a3;
+    --rose:#e3a6a1;
+    --cream:#f3e9dc;
+    --cream-dim:#c9bdae;
+    --line:rgba(216,181,121,0.28);
+    --shadow:0 20px 60px rgba(0,0,0,0.55);
+    --serif:'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+    --script:'Cormorant Garamond', Georgia, serif;
+    --sans:'Jost','Helvetica Neue',Arial,sans-serif;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{
+    height:100%;
+    background:var(--bg-0);
+    color:var(--cream);
+    font-family:var(--sans);
+    overflow:hidden;
+  }
+
+  #app{
+    position:relative;
+    width:100%;
+    height:100vh;
+    height:100dvh;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(216,181,121,0.10), transparent 55%),
+      radial-gradient(ellipse at 80% 85%, rgba(227,166,161,0.10), transparent 55%),
+      linear-gradient(160deg,var(--bg-0),var(--bg-1) 55%,var(--bg-2));
+  }
+
+  /* starfield */
+  #stars{ position:absolute; inset:0; z-index:0; }
+  .star{
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background:var(--gold-soft); opacity:.5;
+    animation:twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.15; transform:scale(1);} 50%{opacity:.9; transform:scale(1.6);} }
+
+  .petal{
+    position:absolute; top:-5%; font-size:14px; color:var(--rose);
+    opacity:.55; animation:fall linear infinite;
+    filter:drop-shadow(0 0 4px rgba(227,166,161,.4));
+  }
+  @keyframes fall{
+    0%{ transform:translateY(-10vh) translateX(0) rotate(0deg); opacity:0; }
+    10%{ opacity:.6; }
+    100%{ transform:translateY(110vh) translateX(40px) rotate(200deg); opacity:0; }
+  }
+
+  /* screens */
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:8vh 6vw;
+    opacity:0; visibility:hidden;
+    transform:translateY(18px);
+    transition:opacity .9s ease, transform .9s ease, visibility 0s linear .9s;
+    z-index:1;
+  }
+  .screen.active{
+    opacity:1; visibility:visible; transform:translateY(0);
+    transition:opacity .9s ease, transform .9s ease;
+    z-index:2;
+  }
+
+  .eyebrow{
+    font-family:var(--sans); letter-spacing:.32em; text-transform:uppercase;
+    font-size:11px; color:var(--gold); opacity:.85; margin-bottom:14px;
+    display:flex; align-items:center; gap:10px; justify-content:center;
+  }
+  .eyebrow::before,.eyebrow::after{ content:''; width:20px; height:1px; background:var(--line); }
+
+  h1.title{
+    font-family:var(--serif); font-weight:700; font-style:italic;
+    font-size:clamp(28px,6vw,52px); line-height:1.15; color:var(--cream);
+    text-shadow:0 2px 18px rgba(216,181,121,0.25);
+  }
+  h1.title .accent{ color:var(--gold-soft); }
+
+  p.sub{
+    font-family:var(--script); font-size:clamp(14px,2.4vw,18px);
+    color:var(--cream-dim); margin-top:10px; font-style:italic;
+  }
+
+  /* ---------- Loading ---------- */
+  #screen-loading .ring{
+    width:64px; height:64px; border-radius:50%;
+    border:1px solid var(--line); border-top-color:var(--gold);
+    animation:spin 1.4s linear infinite; margin-bottom:22px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  #screen-loading .loadtext{ font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--cream-dim); }
+
+  /* ---------- Countdown ---------- */
+  .countdown{ display:flex; gap:14px; margin-top:34px; }
+  .cbox{
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    border-radius:10px;
+    width:64px; padding:12px 0;
+    backdrop-filter:blur(6px);
+  }
+  .cbox .num{ font-family:var(--serif); font-size:24px; color:var(--gold-soft); }
+  .cbox .lbl{ font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--cream-dim); margin-top:4px; }
+
+  /* ---------- Envelope ---------- */
+  .envelope-wrap{ margin-top:40px; cursor:pointer; user-select:none; }
+  .envelope{
+    position:relative; width:180px; height:130px;
+    filter:drop-shadow(0 18px 30px rgba(0,0,0,.5));
+  }
+  .env-body{
+    position:absolute; inset:0; border-radius:6px;
+    background:linear-gradient(155deg,#3a2b3c,#241a28);
+    border:1px solid var(--line);
+  }
+  .env-flap{
+    position:absolute; top:0; left:0; width:100%; height:70%;
+    background:linear-gradient(155deg,#4a3650,#2a1f2e);
+    clip-path:polygon(0 0,100% 0,50% 68%);
+    transform-origin:top center;
+    transition:transform .8s cubic-bezier(.6,.05,.2,1);
+    border:1px solid var(--line);
+    border-bottom:none;
+  }
+  .envelope.open .env-flap{ transform:rotateX(180deg); }
+  .env-seal{
+    position:absolute; top:44%; left:50%; transform:translate(-50%,-50%);
+    width:34px; height:34px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,var(--rose),#8a3f45 70%);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:var(--cream); box-shadow:0 4px 10px rgba(0,0,0,.4);
+    transition:opacity .3s ease .3s;
+    z-index:3;
+  }
+  .envelope.open .env-seal{ opacity:0; }
+  .hint{ margin-top:22px; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); opacity:.8; }
+  .hint .arrow{ display:inline-block; animation:bob 1.6s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(4px);} }
+
+  /* ---------- Gift box ---------- */
+  .gift-wrap{ margin-top:36px; cursor:pointer; }
+  .gift{ font-size:76px; filter:drop-shadow(0 0 24px rgba(216,181,121,.45)); animation:pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    margin-top:34px;
+    font-family:var(--sans); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--bg-0); background:linear-gradient(135deg,var(--gold-soft),var(--gold));
+    border:none; padding:14px 30px; border-radius:999px; cursor:pointer;
+    box-shadow:0 10px 26px rgba(216,181,121,.28);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 14px 30px rgba(216,181,121,.4); }
+  .btn.ghost{
+    background:transparent; color:var(--gold-soft); border:1px solid var(--line); box-shadow:none;
+  }
+  .btn.small{ padding:10px 22px; font-size:10px; margin-top:26px; }
+
+  /* ---------- Card / letter ---------- */
+  .card{
+    max-width:520px; width:100%;
+    background:rgba(20,14,22,0.55);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:32px 28px;
+    backdrop-filter:blur(10px);
+    box-shadow:var(--shadow);
+    max-height:60vh;
+    overflow-y:auto;
+  }
+  .card::-webkit-scrollbar{ width:4px; }
+  .card::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  .card .to{ font-family:var(--serif); font-style:italic; font-size:16px; color:var(--gold-soft); margin-bottom:16px; }
+  .letter-text{
+    font-family:var(--script); font-size:clamp(15px,2.6vw,18px); line-height:1.85;
+    color:var(--cream); text-align:left; white-space:pre-line;
+  }
+
+  /* ---------- Gallery ---------- */
+  .gallery{
+    position:relative; width:100%; max-width:640px; height:56vh;
+    margin-top:28px;
+  }
+  .polaroid{
+    position:absolute; width:120px; background:#f4f1ea; padding:8px 8px 22px;
+    border-radius:3px; box-shadow:0 12px 24px rgba(0,0,0,.45);
+    transition:transform .3s ease, z-index 0s;
+  }
+  .polaroid img{ width:100%; height:120px; object-fit:cover; display:block; background:#5a4a52; }
+  .polaroid:hover{ transform:scale(1.08) rotate(0deg) !important; z-index:20; }
+  .polaroid .cap{ font-family:var(--script); font-size:11px; color:#333; text-align:center; margin-top:6px; }
+
+  /* ---------- Video moment ---------- */
+  .video-frame{
+    width:100%; max-width:380px; aspect-ratio:9/13; border-radius:14px;
+    overflow:hidden; border:1px solid var(--line); box-shadow:var(--shadow);
+    background:#000; margin-top:26px; position:relative;
+  }
+  .video-frame video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .video-frame .noclip{
+    position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px; color:var(--cream-dim); font-size:12px; padding:20px; text-align:center;
+    background:linear-gradient(160deg,#241a28,#150f18);
+  }
+
+  /* ---------- Nav dots ---------- */
+  .nav-hint{
+    position:absolute; bottom:22px; left:50%; transform:translateX(-50%);
+    font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--cream-dim);
+    opacity:.65; z-index:5; display:flex; align-items:center; gap:8px;
+  }
+
+  .icon-heart{ color:var(--rose); }
+
+  /* ---------- Final ---------- */
+  #screen-final .title{ margin-bottom:6px; }
+  #screen-final .sub{ max-width:440px; }
+  .signature{ margin-top:26px; font-family:var(--script); font-style:italic; color:var(--gold-soft); font-size:16px; }
+
+  @media (max-width:520px){
+    .card{ max-width:90vw; padding:26px 20px; }
+    .gallery{ height:60vh; }
+    .polaroid{ width:100px; }
+    .polaroid img{ height:100px; }
+  }
+
+  @media (max-width:360px){
+    .countdown{ gap:8px; }
+    .cbox{ width:54px; padding:10px 0; }
+    .cbox .num{ font-size:20px; }
+    .envelope{ width:150px; height:110px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="stars"></div>
+
+  <!-- 1. LOADING -->
+  <section class="screen active" id="screen-loading">
+    <div class="ring"></div>
+    <div class="loadtext">Menyiapkan sesuatu untukmu…</div>
+  </section>
+
+  <!-- 2. COUNTDOWN / OPENING TEASER -->
+  <section class="screen" id="screen-countdown">
+    <div class="eyebrow">Menghitung Hari</div>
+    <h1 class="title">Her Special Day<br><span class="accent">is Coming</span></h1>
+    <p class="sub">Sesuatu yang indah sedang menunggumu ✧</p>
+    <div class="countdown" id="countdown">
+      <div class="cbox"><div class="num" id="cd-d">00</div><div class="lbl">Hari</div></div>
+      <div class="cbox"><div class="num" id="cd-h">00</div><div class="lbl">Jam</div></div>
+      <div class="cbox"><div class="num" id="cd-m">00</div><div class="lbl">Menit</div></div>
+      <div class="cbox"><div class="num" id="cd-s">00</div><div class="lbl">Detik</div></div>
+    </div>
+    <button class="btn" id="btn-skip-countdown">✦ Buka Sekarang</button>
+  </section>
+
+  <!-- 3. GIFT TEASER -->
+  <section class="screen" id="screen-gift-teaser">
+    <div class="eyebrow">Ada Sesuatu Untukmu</div>
+    <div class="gift-wrap" id="gift-open">
+      <div class="gift">🎁</div>
+    </div>
+    <div class="hint">Klik untuk membuka hadiahmu <span class="arrow">↓</span></div>
+  </section>
+
+  <!-- 4. ENVELOPE -->
+  <section class="screen" id="screen-envelope">
+    <div class="eyebrow" id="env-eyebrow">Untuk Kamu</div>
+    <div class="envelope-wrap" id="envelope-open">
+      <div class="envelope" id="envelope">
+        <div class="env-body"></div>
+        <div class="env-flap"></div>
+        <div class="env-seal">♥</div>
+      </div>
+    </div>
+    <div class="hint">Ketuk amplop untuk membuka <span class="arrow">↓</span></div>
+  </section>
+
+  <!-- 5. LETTER (Happy Birthday) -->
+  <section class="screen" id="screen-letter">
+    <div class="eyebrow">A Love Letter For You</div>
+    <h1 class="title" style="margin-bottom:18px;">Happy Birthday</h1>
+    <div class="card">
+      <div class="to" id="letter-to">Happy Birthday, Sayangku ♥</div>
+      <div class="letter-text" id="letter-body"></div>
+    </div>
+    <button class="btn small" id="btn-to-memories">Our Memories →</button>
+  </section>
+
+  <!-- 6. GALLERY -->
+  <section class="screen" id="screen-gallery">
+    <div class="eyebrow">Every Moment Captured In Love</div>
+    <h1 class="title">Our Memories</h1>
+    <div class="gallery" id="gallery"></div>
+    <button class="btn small" id="btn-to-video">Watch Video →</button>
+  </section>
+
+  <!-- 7. VIDEO MOMENT -->
+  <section class="screen" id="screen-video">
+    <div class="eyebrow">A Special Video Message</div>
+    <h1 class="title">A Moment For You</h1>
+    <div class="video-frame">
+      <video id="moment-video" controls playsinline poster="">
+        <source src="video.mp4" type="video/mp4">
+      </video>
+      <div class="noclip" id="video-fallback">
+        🎬<br>Taruh file <b>video.mp4</b><br>di folder yang sama dengan index.html
+      </div>
+    </div>
+    <button class="btn small" id="btn-to-wishes">Birthday Wishes →</button>
+  </section>
+
+  <!-- 8. WISHES -->
+  <section class="screen" id="screen-wishes">
+    <div class="card" style="text-align:center;">
+      <h1 class="title" style="font-size:26px; margin-bottom:14px;">Birthday Wishes</h1>
+      <div class="to">Happy Birthday, my love ♥</div>
+      <div class="letter-text" id="wishes-body" style="text-align:center;"></div>
+    </div>
+    <button class="btn small" id="btn-to-final">One More Thing →</button>
+  </section>
+
+  <!-- 9. FINAL / GIFT REVEAL -->
+  <section class="screen" id="screen-final">
+    <h1 class="title" id="final-title">Always &amp; Forever</h1>
+    <p class="sub" id="final-sub">Terima kasih sudah menjadi bagian dari hidupku.<br>Semoga hadiah kecil ini membuat hari spesialmu makin indah.</p>
+    <div class="signature" id="final-signature">Forever yours, ♥</div>
+    <button class="btn ghost" id="btn-replay">↺ Ulangi Dari Awal</button>
+  </section>
+
+  <div class="nav-hint" id="nav-hint"></div>
+</div>
+
+<script>
+/* ================================================================
+   KONFIGURASI — EDIT DI SINI SAJA
+   ================================================================ */
+const CONFIG = {
+  namaPenerima: "Sayangku",          // nama yang dituju
+  namaPengirim: "ICEBEAR",           // nama pengirim / signature
+  tanggalUlangTahun: "2026-08-20T00:00:00", // format YYYY-MM-DDTHH:MM:SS, dipakai countdown
+
+  suratUtama: `Selamat ulang tahun ya, cintaku! Hari ini adalah hari yang spesial banget karena hari ini adalah hari lahir orang yang paling berarti di hidupku.
+
+Terima kasih sudah selalu ada, sudah bikin hari-hariku lebih bahagia, dan sudah menjadi alasan aku tersenyum setiap hari. Aku bersyukur banget bisa kenal dan punya sayang sepertimu.
+
+Di umur yang baru ini, aku cuma mau doain semoga semua hal baik selalu datang ke hidupmu, sayang. Semoga sehat selalu, panjang umur, dimudahkan segala urusannya, dan semua impian sayang bisa tercapai satu per satu.
+
+Tetap jadi pribadi yang kuat, baik, dan hebat seperti sekarang ya. Jangan lupa kalau aku selalu ada buat sayang dalam keadaan apa pun.
+
+Sekali lagi, selamat ulang tahun sayangku. Semoga tahun ini penuh kebahagiaan dan tahun ini menjadi tahun terbaik untuk sayang.
+
+I love you, today, tomorrow, and always. ♥`,
+
+  suratWishes: `I wish you happiness, good health, success, and endless blessings in this new chapter of your life. May all your dreams come true, your days be filled with joy, and your heart always find peace.
+
+Thank you for being such a wonderful part of my life. I hope this year brings you everything you've been wishing for. Stay happy, stay healthy, and keep shining.
+
+I love you always. ♥`,
+
+  // Foto: taruh file di folder yang sama lalu isi nama filenya di sini.
+  // Kalau file belum ada, kotak akan tampil sebagai placeholder abu-abu (tidak error).
+  foto: [
+    { src: "foto1.jpg", cap: "" },
+    { src: "foto2.jpg", cap: "" },
+    { src: "foto3.jpg", cap: "" },
+    { src: "foto4.jpg", cap: "" },
+    { src: "foto5.jpg", cap: "" },
+    { src: "foto6.jpg", cap: "" },
+    { src: "foto7.jpg", cap: "" },
+    { src: "foto8.jpg", cap: "" }
+  ],
+
+  // Video: taruh file "video.mp4" di folder yang sama (opsional)
+  videoFile: "video.mp4",
+
+  // Musik latar (opsional): taruh file "musik.mp3" di folder yang sama, isi true untuk mengaktifkan
+  musikAktif: true,
+  musikFile: "musik.mp3"
+};
+/* ================================================================
+   Selesai konfigurasi. Bagian di bawah ini logic — tidak perlu diedit.
+   ================================================================ */
+
+document.getElementById('env-eyebrow').textContent = "Untuk " + CONFIG.namaPenerima;
+document.getElementById('letter-to').textContent = "Happy Birthday " + CONFIG.namaPenerima.toUpperCase() + " ♥";
+document.getElementById('letter-body').textContent = CONFIG.suratUtama;
+document.getElementById('wishes-body').textContent = CONFIG.suratWishes;
+document.getElementById('final-signature').textContent = "Forever yours, " + CONFIG.namaPengirim + " ♥";
+
+// ---------- Starfield ----------
+const starsWrap = document.getElementById('stars');
+for(let i=0;i<70;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  s.style.left = Math.random()*100+'%';
+  s.style.top = Math.random()*100+'%';
+  s.style.animationDelay = (Math.random()*3.5)+'s';
+  starsWrap.appendChild(s);
+}
+const petalChars=['♥','✦'];
+for(let i=0;i<10;i++){
+  const p=document.createElement('div');
+  p.className='petal';
+  p.textContent = petalChars[Math.floor(Math.random()*petalChars.length)];
+  p.style.left = Math.random()*100+'%';
+  p.style.fontSize = (10+Math.random()*10)+'px';
+  p.style.animationDuration = (9+Math.random()*8)+'s';
+  p.style.animationDelay = (Math.random()*10)+'s';
+  starsWrap.appendChild(p);
+}
+
+// ---------- Gallery build ----------
+const galleryEl = document.getElementById('gallery');
+const layout = [
+  // Baris atas (4 foto)
+  {top:'2%', left:'4%',  rot:-8},
+  {top:'0%', left:'28%', rot:5},
+  {top:'4%', left:'52%', rot:-4},
+  {top:'0%', left:'76%', rot:8},
+
+  // Baris bawah (4 foto)
+  {top:'40%', left:'4%',  rot:6},
+  {top:'38%', left:'28%', rot:-7},
+  {top:'42%', left:'52%', rot:5},
+  {top:'38%', left:'76%', rot:-6},
+];
+CONFIG.foto.forEach((f,i)=>{
+  const pos = layout[i % layout.length];
+  const div=document.createElement('div');
+  div.className='polaroid';
+  div.style.top = pos.top;
+  div.style.left = pos.left;
+  div.style.transform = `rotate(${pos.rot}deg)`;
+  div.innerHTML = `<img src="${f.src}" onerror="this.style.background='linear-gradient(160deg,#4a3650,#241a28)'; this.removeAttribute('src');" alt="">
+                    <div class="cap">${f.cap||''}</div>`;
+  galleryEl.appendChild(div);
+});
+
+// ---------- Video fallback check ----------
+const video = document.getElementById('moment-video');
+const videoFallback = document.getElementById('video-fallback');
+video.querySelector('source').src = CONFIG.videoFile;
+video.addEventListener('error', ()=>{ videoFallback.style.display='flex'; video.style.display='none'; });
+video.load();
+
+// ---------- Background music ----------
+let bgAudio=null;
+if(CONFIG.musikAktif){
+  bgAudio = new Audio(CONFIG.musikFile);
+  bgAudio.loop = true;
+  bgAudio.volume = 0.5;
+}
+
+// ---------- Screen flow ----------
+const order = ['screen-loading','screen-countdown','screen-gift-teaser','screen-envelope','screen-letter','screen-gallery','screen-video','screen-wishes','screen-final'];
+let current = 0;
+function showScreen(id){
+  order.forEach(sid=>document.getElementById(sid).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  current = order.indexOf(id);
+  if(bgAudio && current>2 && bgAudio.paused){ bgAudio.play().catch(()=>{}); }
+}
+
+// Loading -> Countdown
+setTimeout(()=>{ showScreen('screen-countdown'); startCountdown(); }, 1800);
+
+// Countdown logic
+let countdownTimer=null;
+function startCountdown(){
+  const target = new Date(CONFIG.tanggalUlangTahun).getTime();
+  function tick(){
+    const now = Date.now();
+    const diff = target - now;
+    if(diff<=0){
+      clearInterval(countdownTimer);
+      showScreen('screen-gift-teaser');
+      return;
+    }
+    const d = Math.floor(diff/86400000);
+    const h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
+    document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+    document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
+  }
+  tick();
+  countdownTimer = setInterval(tick,1000);
+}
+document.getElementById('btn-skip-countdown').addEventListener('click', ()=>{
+  clearInterval(countdownTimer);
+  showScreen('screen-gift-teaser');
+});
+
+// Gift teaser -> envelope
+document.getElementById('gift-open').addEventListener('click', ()=>{
+  showScreen('screen-envelope');
+});
+
+// Envelope open -> letter
+document.getElementById('envelope-open').addEventListener('click', ()=>{
+  const env = document.getElementById('envelope');
+  if(env.classList.contains('open')) return;
+  env.classList.add('open');
+  setTimeout(()=>{ showScreen('screen-letter'); }, 900);
+});
+
+document.getElementById('btn-to-memories').addEventListener('click', ()=> showScreen('screen-gallery'));
+document.getElementById('btn-to-video').addEventListener('click', ()=> showScreen('screen-video'));
+document.getElementById('btn-to-wishes').addEventListener('click', ()=> showScreen('screen-wishes'));
+document.getElementById('btn-to-final').addEventListener('click', ()=> showScreen('screen-final'));
+document.getElementById('btn-replay').addEventListener('click', ()=>{
+  document.getElementById('envelope').classList.remove('open');
+  showScreen('screen-gift-teaser');
+});
+</script>
+</body>
+</html>
