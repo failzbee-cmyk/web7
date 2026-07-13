@@ -29,7 +29,11 @@
     --sans:'Jost','Helvetica Neue',Arial,sans-serif;
   }
 
-  *{ box-sizing:border-box; margin:0; padding:0; }
+  *{
+    box-sizing:border-box; margin:0; padding:0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
 
   html,body{
     height:100%;
@@ -37,6 +41,11 @@
     color:var(--cream);
     font-family:var(--sans);
     overflow:hidden;
+  }
+
+  button, a, .balloon, .envelope-wrap, .polaroid, [onclick]{
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
   }
 
   #app{
@@ -172,12 +181,14 @@
   .balloon-field{
     position:relative; width:100%; max-width:640px; height:52vh;
     margin-top:10px;
+    overflow:hidden;
   }
   .balloon{
     position:absolute;
+    bottom:-90px;
     width:52px; height:64px;
     cursor:pointer;
-    animation:balloon-float 5.5s ease-in-out infinite;
+    animation:balloon-rise 7s linear infinite;
     transition:transform .15s ease;
     will-change: transform;
   }
@@ -198,30 +209,28 @@
     position:absolute; left:50%; top:100%; width:1px; height:22px;
     background:var(--line); transform:translateX(-50%);
   }
-  .balloon .num{
-    position:absolute; inset:0 0 18% 0; display:flex; align-items:center; justify-content:center;
-    font-family:var(--serif); font-weight:700; font-size:16px; color:rgba(255,255,255,.85);
-    text-shadow:0 1px 3px rgba(0,0,0,.35); pointer-events:none;
-  }
-  @keyframes balloon-float{
-    0%,100%{ transform:translateY(0) rotate(-2deg); }
-    50%{ transform:translateY(-16px) rotate(2deg); }
+  @keyframes balloon-rise{
+    0%{ transform:translateY(0) rotate(-3deg); opacity:0; }
+    8%{ opacity:1; }
+    45%{ transform:translateY(-45vh) rotate(3deg); }
+    92%{ opacity:1; }
+    100%{ transform:translateY(-95vh) rotate(-3deg); opacity:0; }
   }
   .balloon.popped{
     animation:none;
     pointer-events:none;
     transition:transform .18s ease, opacity .18s ease;
-    transform:scale(1.3);
     opacity:0;
   }
   .pop-burst{
     position:absolute; font-size:28px; pointer-events:none;
+    transform:translate(-50%,-50%);
     animation:pop-burst .5s ease-out forwards;
   }
   @keyframes pop-burst{
-    0%{ transform:scale(.3); opacity:1; }
-    70%{ transform:scale(1.3); opacity:.9; }
-    100%{ transform:scale(1.6); opacity:0; }
+    0%{ transform:translate(-50%,-50%) scale(.3); opacity:1; }
+    70%{ transform:translate(-50%,-50%) scale(1.3); opacity:.9; }
+    100%{ transform:translate(-50%,-50%) scale(1.6); opacity:0; }
   }
 
   /* ---------- Gift box ---------- */
@@ -243,6 +252,7 @@
     background:transparent; color:var(--gold-soft); border:1px solid var(--line); box-shadow:none;
   }
   .btn.small{ padding:10px 22px; font-size:10px; margin-top:26px; }
+  .btn.ready{ animation:pulse 1.6s ease-in-out infinite; }
 
   /* ---------- Card / letter ---------- */
   .card{
@@ -334,14 +344,14 @@
   <!-- 1. LOADING -->
   <section class="screen active" id="screen-loading">
     <div class="ring"></div>
-    <div class="loadtext">Menyiapkan sesuatu untukmu…</div>
+    <div class="loadtext" id="loading-text">Menyiapkan sesuatu untukmu…</div>
   </section>
 
   <!-- 2. COUNTDOWN / OPENING TEASER -->
   <section class="screen" id="screen-countdown">
-    <div class="eyebrow">Menghitung Hari</div>
-    <h1 class="title">Her Special Day<br><span class="accent">is Coming</span></h1>
-    <p class="sub">Sesuatu yang indah sedang menunggumu ✧</p>
+    <div class="eyebrow" id="countdown-eyebrow">Menghitung Hari</div>
+    <h1 class="title" id="countdown-title">Her Special Day<br><span class="accent">is Coming</span></h1>
+    <p class="sub" id="countdown-sub">Sesuatu yang indah sedang menunggumu ✧</p>
     <div class="countdown" id="countdown">
       <div class="cbox"><div class="num" id="cd-d">00</div><div class="lbl">Hari</div></div>
       <div class="cbox"><div class="num" id="cd-h">00</div><div class="lbl">Jam</div></div>
@@ -353,9 +363,9 @@
 
   <!-- 2b. BALLOON POP -->
   <section class="screen" id="screen-balloons">
-    <div class="eyebrow">Sebelum Buka Kado</div>
-    <h1 class="title">Pecahkan 18 Balon<br><span class="accent">Dulu, Yuk!</span></h1>
-    <p class="sub">Satu balon, satu doa baik untukmu ✧</p>
+    <div class="eyebrow" id="balloons-eyebrow">Sebelum Buka Kado</div>
+    <h1 class="title" id="balloons-title">Pecahkan 18 Balon<br><span class="accent">Dulu, Yuk!</span></h1>
+    <p class="sub" id="balloons-sub">Satu balon, satu doa baik untukmu ✧</p>
     <div class="balloon-progress" id="balloon-progress">0 / 18 balon pecah</div>
     <div class="balloon-field" id="balloon-field"></div>
     <div class="hint" id="balloon-hint">Ketuk semua balon untuk melanjutkan</div>
@@ -363,11 +373,11 @@
 
   <!-- 3. GIFT TEASER -->
   <section class="screen" id="screen-gift-teaser">
-    <div class="eyebrow">Ada Sesuatu Untukmu</div>
+    <div class="eyebrow" id="gift-eyebrow">Ada Sesuatu Untukmu</div>
     <div class="gift-wrap" id="gift-open">
       <div class="gift">🎁</div>
     </div>
-    <div class="hint">Klik untuk membuka hadiahmu <span class="arrow">↓</span></div>
+    <div class="hint" id="gift-hint">Klik untuk membuka hadiahmu <span class="arrow">↓</span></div>
   </section>
 
   <!-- 4. ENVELOPE -->
@@ -380,13 +390,13 @@
         <div class="env-seal">♥</div>
       </div>
     </div>
-    <div class="hint">Ketuk amplop untuk membuka <span class="arrow">↓</span></div>
+    <div class="hint" id="envelope-hint">Ketuk amplop untuk membuka <span class="arrow">↓</span></div>
   </section>
 
   <!-- 5. LETTER (Happy Birthday) -->
   <section class="screen" id="screen-letter">
-    <div class="eyebrow">A Love Letter For You</div>
-    <h1 class="title" style="margin-bottom:18px;">Happy Birthday</h1>
+    <div class="eyebrow" id="letter-eyebrow">A Love Letter For You</div>
+    <h1 class="title" style="margin-bottom:18px;" id="letter-title">Happy Birthday</h1>
     <div class="card">
       <div class="to" id="letter-to">Happy Birthday, Sayangku ♥</div>
       <div class="letter-text" id="letter-body"></div>
@@ -396,16 +406,16 @@
 
   <!-- 6. GALLERY -->
   <section class="screen" id="screen-gallery">
-    <div class="eyebrow">Every Moment Captured In Love</div>
-    <h1 class="title">Our Memories</h1>
+    <div class="eyebrow" id="gallery-eyebrow">Every Moment Captured In Love</div>
+    <h1 class="title" id="gallery-title">Our Memories</h1>
     <div class="gallery" id="gallery"></div>
     <button class="btn small" id="btn-to-video">Watch Video →</button>
   </section>
 
   <!-- 7. VIDEO MOMENT -->
   <section class="screen" id="screen-video">
-    <div class="eyebrow">A Special Video Message</div>
-    <h1 class="title">A Moment For You</h1>
+    <div class="eyebrow" id="video-eyebrow">A Special Video Message</div>
+    <h1 class="title" id="video-title">A Moment For You</h1>
     <div class="video-frame">
       <video id="moment-video" controls playsinline poster="">
         <source src="video.mp4" type="video/mp4">
@@ -420,8 +430,8 @@
   <!-- 8. WISHES -->
   <section class="screen" id="screen-wishes">
     <div class="card" style="text-align:center;">
-      <h1 class="title" style="font-size:26px; margin-bottom:14px;">Birthday Wishes</h1>
-      <div class="to">Happy Birthday, my love ♥</div>
+      <h1 class="title" style="font-size:26px; margin-bottom:14px;" id="wishes-title">Birthday Wishes</h1>
+      <div class="to" id="wishes-to">Happy Birthday, my love ♥</div>
       <div class="letter-text" id="wishes-body" style="text-align:center;"></div>
     </div>
     <button class="btn small" id="btn-to-final">One More Thing →</button>
@@ -443,9 +453,79 @@
    KONFIGURASI — EDIT DI SINI SAJA
    ================================================================ */
 const CONFIG = {
+
+  // ---------------------------------------------------------------
+  // 1) DATA UTAMA
+  // ---------------------------------------------------------------
   namaPenerima: "Sayangku",          // nama yang dituju
   namaPengirim: "ICEBEAR",           // nama pengirim / signature
-  tanggalUlangTahun: "2026-08-20T00:00:00", // format YYYY-MM-DDTHH:MM:SS, dipakai countdown
+  tanggalUlangTahun: "2026-07-07T11:28:00", // format YYYY-MM-DDTHH:MM:SS, dipakai countdown
+
+  // Jumlah balon yang harus dipecahkan sebelum lanjut ke kado
+  jumlahBalon: 18,
+
+  // ---------------------------------------------------------------
+  // 2) WARNA TEMA
+  // Ganti kode warna hex di sini untuk mengubah seluruh nuansa web
+  // tanpa perlu menyentuh bagian CSS sama sekali.
+  // ---------------------------------------------------------------
+  warna: {
+    bg0: "#0e0a13",       // latar paling gelap
+    bg1: "#1c1420",       // latar gradasi tengah
+    bg2: "#2a1d2b",       // latar gradasi bawah
+    gold: "#d8b579",      // warna aksen utama (emas)
+    goldSoft: "#e9d3a3",  // warna aksen emas lebih terang
+    rose: "#e3a6a1",      // warna aksen kedua (pink/rose)
+    cream: "#f3e9dc",     // warna teks utama
+    creamDim: "#c9bdae"   // warna teks sekunder/redup
+  },
+
+  // ---------------------------------------------------------------
+  // 3) TEKS SETIAP LAYAR
+  // Semua tulisan yang tampil di layar bisa diganti di sini.
+  // Catatan: field yang mengandung tag seperti <br> atau <span> boleh
+  // memakai HTML sederhana, field lain cukup teks biasa.
+  // ---------------------------------------------------------------
+  teks: {
+    loading: "Menyiapkan sesuatu untukmu…",
+
+    countdownEyebrow: "Menghitung Hari",
+    countdownTitle: "Her Special Day<br><span class=\"accent\">is Coming</span>",
+    countdownSub: "Sesuatu yang indah sedang menunggumu ✧",
+    countdownSubSelesai: "Waktunya sudah tiba! Ketuk tombol di bawah untuk membuka ✧",
+    countdownTombol: "✦ Buka Sekarang",
+
+    balloonsEyebrow: "Sebelum Buka Kado",
+    balloonsTitle: "Pecahkan {jumlahBalon} Balon<br><span class=\"accent\">Dulu, Yuk!</span>",
+    balloonsSub: "Satu balon, satu doa baik untukmu ✧",
+    balloonsHint: "Ketuk semua balon untuk melanjutkan",
+    balloonsSelesai: "Semua balon pecah! Kadonya menunggumu ♥",
+
+    giftEyebrow: "Ada Sesuatu Untukmu",
+    giftHint: "Klik untuk membuka hadiahmu <span class=\"arrow\">↓</span>",
+
+    envelopeHint: "Ketuk amplop untuk membuka <span class=\"arrow\">↓</span>",
+
+    letterEyebrow: "A Love Letter For You",
+    letterTitle: "Happy Birthday",
+    tombolMemories: "Our Memories →",
+
+    galleryEyebrow: "Every Moment Captured In Love",
+    galleryTitle: "Our Memories",
+    tombolVideo: "Watch Video →",
+
+    videoEyebrow: "A Special Video Message",
+    videoTitle: "A Moment For You",
+    videoFallback: "🎬<br>Taruh file <b>video.mp4</b><br>di folder yang sama dengan index.html",
+    tombolWishes: "Birthday Wishes →",
+
+    wishesTitle: "Birthday Wishes",
+    tombolFinal: "One More Thing →",
+
+    finalTitle: "Always &amp; Forever",
+    finalSub: "Terima kasih sudah menjadi bagian dari hidupku.<br>Semoga hadiah kecil ini membuat hari spesialmu makin indah.",
+    tombolReplay: "↺ Ulangi Dari Awal"
+  },
 
   suratUtama: `Selamat ulang tahun ya, cintaku! Hari ini adalah hari yang spesial banget karena hari ini adalah hari lahir orang yang paling berarti di hidupku.
 
@@ -468,16 +548,11 @@ I love you always. ♥`,
   // Foto: taruh file di folder yang sama lalu isi nama filenya di sini.
   // Kalau file belum ada, kotak akan tampil sebagai placeholder abu-abu (tidak error).
   foto: [
-    { src: "foto1.jpg", cap: "" },
-    { src: "foto2.jpg", cap: "" },
-    { src: "foto3.jpg", cap: "" },
-    { src: "foto4.jpg", cap: "" },
-    { src: "foto5.jpg", cap: "" },
-    { src: "foto6.jpg", cap: "" },
-    { src: "foto7.jpg", cap: "" },
-    { src: "foto8.jpg", cap: "" }
-  ],
-
+  { src: "foto1.jpg", cap: "My Love ❤️" },
+  { src: "foto2.jpg", cap: "Forever ♾️" },
+  { src: "foto3.jpg", cap: "Soulmate 🤍" },
+  { src: "foto4.jpg", cap: "Always 💕" }
+],
   // Video: taruh file "video.mp4" di folder yang sama (opsional)
   videoFile: "video.mp4",
 
@@ -489,8 +564,68 @@ I love you always. ♥`,
    Selesai konfigurasi. Bagian di bawah ini logic — tidak perlu diedit.
    ================================================================ */
 
+// ---------- Terapkan warna tema ke CSS ----------
+(function applyTheme(){
+  const root = document.documentElement.style;
+  const w = CONFIG.warna;
+  root.setProperty('--bg-0', w.bg0);
+  root.setProperty('--bg-1', w.bg1);
+  root.setProperty('--bg-2', w.bg2);
+  root.setProperty('--gold', w.gold);
+  root.setProperty('--gold-soft', w.goldSoft);
+  root.setProperty('--rose', w.rose);
+  root.setProperty('--cream', w.cream);
+  root.setProperty('--cream-dim', w.creamDim);
+})();
+
+// ---------- Terapkan semua teks dari CONFIG.teks ke setiap layar ----------
+(function applyTeks(){
+  const t = CONFIG.teks;
+  const isi = (id, html) => { const el = document.getElementById(id); if(el) el.innerHTML = html; };
+  const isiTeks = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
+
+  isiTeks('loading-text', t.loading);
+
+  isiTeks('countdown-eyebrow', t.countdownEyebrow);
+  isi('countdown-title', t.countdownTitle);
+  isiTeks('countdown-sub', t.countdownSub);
+  isiTeks('btn-skip-countdown', t.countdownTombol);
+
+  isiTeks('balloons-eyebrow', t.balloonsEyebrow);
+  isi('balloons-title', t.balloonsTitle.replace('{jumlahBalon}', CONFIG.jumlahBalon));
+  isiTeks('balloons-sub', t.balloonsSub);
+  isiTeks('balloon-hint', t.balloonsHint);
+  isiTeks('balloon-progress', '0 / ' + CONFIG.jumlahBalon + ' balon pecah');
+
+  isiTeks('gift-eyebrow', t.giftEyebrow);
+  isi('gift-hint', t.giftHint);
+
+  isi('envelope-hint', t.envelopeHint);
+
+  isiTeks('letter-eyebrow', t.letterEyebrow);
+  isiTeks('letter-title', t.letterTitle);
+  isiTeks('btn-to-memories', t.tombolMemories);
+
+  isiTeks('gallery-eyebrow', t.galleryEyebrow);
+  isiTeks('gallery-title', t.galleryTitle);
+  isiTeks('btn-to-video', t.tombolVideo);
+
+  isiTeks('video-eyebrow', t.videoEyebrow);
+  isiTeks('video-title', t.videoTitle);
+  isi('video-fallback', t.videoFallback);
+  isiTeks('btn-to-wishes', t.tombolWishes);
+
+  isiTeks('wishes-title', t.wishesTitle);
+  isiTeks('btn-to-final', t.tombolFinal);
+
+  isi('final-title', t.finalTitle);
+  isi('final-sub', t.finalSub);
+  isiTeks('btn-replay', t.tombolReplay);
+})();
+
 document.getElementById('env-eyebrow').textContent = "Untuk " + CONFIG.namaPenerima;
 document.getElementById('letter-to').textContent = "Happy Birthday " + CONFIG.namaPenerima.toUpperCase() + " ♥";
+document.getElementById('wishes-to').textContent = "Happy Birthday, " + CONFIG.namaPenerima + " ♥";
 document.getElementById('letter-body').textContent = CONFIG.suratUtama;
 document.getElementById('wishes-body').textContent = CONFIG.suratWishes;
 document.getElementById('final-signature').textContent = "Forever yours, " + CONFIG.namaPengirim + " ♥";
@@ -557,15 +692,23 @@ function showScreen(id){
 setTimeout(()=>{ showScreen('screen-countdown'); startCountdown(); }, 1800);
 
 // Countdown logic
+// Catatan: saat countdown mencapai 00:00:00:00, web TIDAK otomatis berpindah layar.
+// Countdown hanya berhenti dan menunggu tombol "Buka Sekarang" ditekan secara manual.
 let countdownTimer=null;
 function startCountdown(){
   const target = new Date(CONFIG.tanggalUlangTahun).getTime();
+  const btnSkip = document.getElementById('btn-skip-countdown');
   function tick(){
     const now = Date.now();
     const diff = target - now;
     if(diff<=0){
       clearInterval(countdownTimer);
-      showScreen('screen-balloons');
+      document.getElementById('cd-d').textContent = '00';
+      document.getElementById('cd-h').textContent = '00';
+      document.getElementById('cd-m').textContent = '00';
+      document.getElementById('cd-s').textContent = '00';
+      document.getElementById('countdown-sub').textContent = CONFIG.teks.countdownSubSelesai;
+      btnSkip.classList.add('ready');
       return;
     }
     const d = Math.floor(diff/86400000);
@@ -580,6 +723,8 @@ function startCountdown(){
   tick();
   countdownTimer = setInterval(tick,1000);
 }
+// Tombol ini adalah SATU-SATUNYA cara untuk lanjut dari layar countdown ke layar balon,
+// baik saat countdown masih berjalan (skip manual) maupun saat sudah selesai.
 document.getElementById('btn-skip-countdown').addEventListener('click', ()=>{
   clearInterval(countdownTimer);
   showScreen('screen-balloons');
@@ -590,7 +735,7 @@ const balloonColors = ['#e3a6a1','#d8b579','#c98b8f','#e9d3a3','#b98a6b','#dba0a
 const balloonField = document.getElementById('balloon-field');
 const balloonProgress = document.getElementById('balloon-progress');
 const balloonHint = document.getElementById('balloon-hint');
-const TOTAL_BALLOONS = 18;
+const TOTAL_BALLOONS = CONFIG.jumlahBalon;
 let poppedCount = 0;
 let balloonsBuilt = false;
 
@@ -598,24 +743,36 @@ function buildBalloons(){
   if(balloonsBuilt) return;
   balloonsBuilt = true;
   const cols = 6;
-  const rows = Math.ceil(TOTAL_BALLOONS/cols);
-  const colGapPct = 100/cols;
-  const rowGapPct = 78/rows;
+  // Ukur lebar area balon & lebar balon yang sebenarnya dirender (beda di layar kecil),
+  // lalu posisikan pakai pixel dan di-clamp supaya balon kolom paling kiri/kanan
+  // tidak pernah terpotong oleh tepi kontainer.
+  const fieldWidth = balloonField.clientWidth;
+  const probe = document.createElement('div');
+  probe.className = 'balloon';
+  probe.style.visibility = 'hidden';
+  probe.style.position = 'absolute';
+  balloonField.appendChild(probe);
+  const balloonWidthPx = probe.getBoundingClientRect().width || 52;
+  probe.remove();
+  const edgePad = 6; // jarak aman dari tepi kiri/kanan, dalam px
+  const colWidth = fieldWidth / cols;
   for(let i=1;i<=TOTAL_BALLOONS;i++){
     const b = document.createElement('div');
     b.className = 'balloon';
     const col = (i-1)%cols;
-    const row = Math.floor((i-1)/cols);
-    const leftPct = colGapPct*col + (colGapPct/2) - 8;
-    const topPct = rowGapPct*row + 4;
-    const delay = Math.random()*3.5;
-    const duration = 4.5 + Math.random()*2.5;
-    b.style.left = leftPct+'%';
-    b.style.top = topPct+'%';
-    b.style.animationDelay = delay+'s';
+    const colCenter = colWidth*col + colWidth/2;
+    const jitter = (Math.random()-0.5) * Math.max(colWidth - balloonWidthPx, 0) * 0.7;
+    let leftPx = colCenter - balloonWidthPx/2 + jitter;
+    leftPx = Math.max(edgePad, Math.min(fieldWidth - balloonWidthPx - edgePad, leftPx));
+    const duration = 6 + Math.random()*3.5;
+    // delay negatif membuat balon langsung tampil di berbagai ketinggian
+    // seolah sudah naik dari bawah sejak awal, lalu terus menerus muncul lagi dari bawah
+    const negDelay = -(Math.random()*duration);
+    b.style.left = leftPx+'px';
     b.style.animationDuration = duration+'s';
+    b.style.animationDelay = negDelay+'s';
     const color = balloonColors[Math.floor(Math.random()*balloonColors.length)];
-    b.innerHTML = `<div class="body" style="background:radial-gradient(circle at 32% 28%, ${color}, ${color}dd 60%, #00000055);"><div class="num">${i}</div></div><div class="string"></div>`;
+    b.innerHTML = `<div class="body" style="background:radial-gradient(circle at 32% 28%, ${color}, ${color}dd 60%, #00000055);"></div><div class="string"></div>`;
     b.addEventListener('click', ()=> popBalloon(b));
     balloonField.appendChild(b);
   }
@@ -623,6 +780,19 @@ function buildBalloons(){
 
 function popBalloon(b){
   if(b.classList.contains('popped')) return;
+
+  // hitung posisi balon saat ini (karena sedang naik/bergerak)
+  const bRect = b.getBoundingClientRect();
+  const fRect = balloonField.getBoundingClientRect();
+  const burstLeft = bRect.left - fRect.left + bRect.width/2;
+  const burstTop = bRect.top - fRect.top + bRect.height/2;
+
+  // bekukan posisi balon persis di titik saat dipecahkan
+  const computedTransform = getComputedStyle(b).transform;
+  b.style.animation = 'none';
+  b.style.transform = (computedTransform && computedTransform !== 'none') ? computedTransform : '';
+  void b.offsetWidth; // paksa reflow supaya transisi berikutnya halus
+
   b.classList.add('popped');
   poppedCount++;
   balloonProgress.textContent = poppedCount + ' / ' + TOTAL_BALLOONS + ' balon pecah';
@@ -630,13 +800,13 @@ function popBalloon(b){
   const burst = document.createElement('div');
   burst.className = 'pop-burst';
   burst.textContent = '✨';
-  burst.style.left = b.style.left;
-  burst.style.top = b.style.top;
+  burst.style.left = burstLeft + 'px';
+  burst.style.top = burstTop + 'px';
   balloonField.appendChild(burst);
   setTimeout(()=> burst.remove(), 550);
 
   if(poppedCount >= TOTAL_BALLOONS){
-    balloonHint.textContent = 'Semua balon pecah! Kadonya menunggumu ♥';
+    balloonHint.textContent = CONFIG.teks.balloonsSelesai;
     setTimeout(()=> showScreen('screen-gift-teaser'), 1100);
   }
 }
